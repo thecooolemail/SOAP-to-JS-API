@@ -73,7 +73,7 @@ app.get("/productscount/:count", (request, response) => {
         //console.log(x.data)
         parseString(x.data, function (err, result) {
             let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
-            let itemsJS = items.map(x => {return {name: x.URUNACIKLAMA[0], id: x.URUNID[0], price: x.WEBSATISFIYAT1[0], group: x.URUNGRUBU[0], sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}})
+            let itemsJS = items.map(x => {return {name: x.URUNACIKLAMA[0], id: x.URUNID[0], price: x.PERSATISFIYAT3[0], group: x.URUNGRUBU[0], sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}})
             response.send({Items: itemsJS.slice(0, count)});
         })
     })
