@@ -54,7 +54,7 @@ app.get("/", (request, response) => {
             let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
             console.log(items)
             
-            let itemsJS = items.map(x => {return {name: x.URUNACIKLAMA[0], id: x.URUNID[0], price: x.WEBSATISFIYAT1[0], group: x.URUNGRUBU[0], sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}})
+            let itemsJS = items.map(x => {return {name: x.URUNACIKLAMA[0], id: x.URUNID[0], price: x.PERSATISFIYAT3[0], group: x.URUNGRUBU[0], sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}})
             
             response.send({Items: itemsJS});
         })
