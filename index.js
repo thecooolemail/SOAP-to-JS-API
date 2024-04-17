@@ -19,6 +19,31 @@ let Body = `
     </soap:Body>
     </soap:Envelope>
 `
+function formatString(str) {
+    const remove = ["mm", "ml", "kg", "g", "gr", "£", "cl", "lt" ]; // Strings to be removed
+    const measurements = ["ml", "kg", "g", "gr", "cl", "lt"]; // Strings to be considered as measurements
+
+    // Regular expression pattern for matching measurements with numbers and optional multiplication symbols preceding them
+    const measurementPattern = new RegExp(`\\b(\\d+(?:x\\d+)?(?:\\.\\d+)?) ?(${measurements.join('|')})\\b`, 'ig');
+
+    // Extract measurement
+    const measurementMatch = str.match(measurementPattern);
+    const measurement = measurementMatch ? measurementMatch[0] : '';
+
+    // Remove measurements and strings to be removed
+    let cleanedStr = str.replace(measurementPattern, ''); // Remove measurement from name
+    remove.forEach(word => {
+        cleanedStr = cleanedStr.replace(new RegExp(`\\b${word}\\b`, 'ig'), ''); // Remove other unwanted strings
+    });
+
+    // Format cleaned string
+    cleanedStr = cleanedStr.replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+
+    return { name: cleanedStr.trim(), measurement };
+}
+
+
+
 
 function extractVariables(originalString, variable) {
     // Split the original string by "-"
@@ -52,9 +77,12 @@ app.get("/", (request, response) => {
     .then((x) => {
         parseString(x.data, function (err, result) {
             let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
-            console.log(items[0].BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0])
-            
-            let itemsJS = items.map(x => {return {name: x.URUNACIKLAMA[0], id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0], group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}})
+
+            let itemsJS = items.map(x => 
+            {
+                let format = formatString(x.URUNACIKLAMA[0])
+                return {name: x.URUNACIKLAMA[0], name2: format.name, id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0], measurement: format.measurement,group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}
+            })
             
             response.send({Items: itemsJS});
         })
@@ -65,6 +93,7 @@ app.get("/", (request, response) => {
     });
 });
 
+/*
 app.get("/productscount/:count", (request, response) => {
     const count = parseInt(request.params.count);
     console.log(count)
@@ -83,7 +112,7 @@ app.get("/productscount/:count", (request, response) => {
     });
 });
 
-
+*/
 
 
 
