@@ -20,18 +20,30 @@ let Body = `
     </soap:Envelope>
 `
 function formatString(str) {
-    const remove = ["mm", "ml", "kg", "g", "gr", "£", "cl", "lt" ]; // Strings to be removed
+    const remove = ["mm", "ml", "kg", "g", "gr", "£", "cl", "lt", "Each", "Tfc"]; // Strings to be removed
     const measurements = ["ml", "kg", "g", "gr", "cl", "lt"]; // Strings to be considered as measurements
+
+    let cleanedStr = str.trim(); // Trim whitespace from the start and end of the string
+
+    // Remove the word "Cyprus" if it is the first word in the string
+    if (cleanedStr.toLowerCase().startsWith("cyprus ")) {
+        cleanedStr = cleanedStr.slice(7); // Remove "Cyprus " (7 characters) from the start of the string
+    }
+
+
+    // Regular expression pattern for matching Tfc.X followed by a number
+    const tfcPattern = /Tfc\.\w\s*\d*/ig;
+    cleanedStr = cleanedStr.replace(tfcPattern, '').trim();
 
     // Regular expression pattern for matching measurements with numbers and optional multiplication symbols preceding them
     const measurementPattern = new RegExp(`\\b(\\d+(?:x\\d+)?(?:\\.\\d+)?) ?(${measurements.join('|')})\\b`, 'ig');
 
     // Extract measurement
-    const measurementMatch = str.match(measurementPattern);
+    const measurementMatch = cleanedStr.match(measurementPattern);
     const measurement = measurementMatch ? measurementMatch[0] : '';
 
     // Remove measurements and strings to be removed
-    let cleanedStr = str.replace(measurementPattern, ''); // Remove measurement from name
+    cleanedStr = cleanedStr.replace(measurementPattern, ''); // Remove measurement from name
     remove.forEach(word => {
         cleanedStr = cleanedStr.replace(new RegExp(`\\b${word}\\b`, 'ig'), ''); // Remove other unwanted strings
     });
@@ -41,8 +53,6 @@ function formatString(str) {
 
     return { name: cleanedStr.trim(), measurement };
 }
-
-
 
 
 function extractVariables(originalString, variable) {
