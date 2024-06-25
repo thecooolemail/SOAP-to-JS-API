@@ -83,17 +83,18 @@ app.get("/", (request, response) => {
  });
 
  app.get("/allproducts", (request, response) => {
-    axios.post('http://193.115.198.196:8089/Service1.asmx?op=GetUrunListesi', Body,{ headers: { "Content-Type": "text/xml; charset=utf-8" }})
+    console.log("Getting Items")
+    axios.post(process.env.URL, Body,{ headers: { "Content-Type": "text/xml; charset=utf-8" }})
     .then((x) => {
         parseString(x.data, function (err, result) {
             let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
-
+            console.log("Got Items")
             let itemsJS = items.map(x => 
             {
                 let format = formatString(x.URUNACIKLAMA[0])
                 return {name: format.name, id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0], measurement: format.measurement,group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}
             })
-            
+
             response.send({Items: itemsJS});
         })
     })
@@ -102,29 +103,6 @@ app.get("/", (request, response) => {
         response.status(500).send("Error occurred"); 
     });
 });
-
-/*
-app.get("/productscount/:count", (request, response) => {
-    const count = parseInt(request.params.count);
-    console.log(count)
-    axios.post('http://193.115.198.196:8089/Service1.asmx?op=GetUrunListesi', Body,{ headers: { "Content-Type": "text/xml; charset=utf-8" }})
-    .then((x) => {
-        //console.log(x.data)
-        parseString(x.data, function (err, result) {
-            let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
-            let itemsJS = items.map(x => {return {name: x.URUNACIKLAMA[0], id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0], group: x.URUNGRUBU[0],sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}})
-            response.send({Items: itemsJS.slice(0, count)});
-        })
-    })
-    .catch((x) => {
-        console.log("error");
-        response.status(500).send("Error occurred"); 
-    });
-});
-
-*/
-
-
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
