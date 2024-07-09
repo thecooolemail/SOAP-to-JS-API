@@ -24,7 +24,7 @@ function formatString(str) {
     const measurements = ["ml", "kg", "g", "gr", "cl", "lt"]; // Strings to be considered as measurements
 
     let cleanedStr = str.trim(); // Trim whitespace from the start and end of the string
-
+    console.log("Before : ", cleanedStr)
     // Remove the word "Cyprus" if it is the first word in the string
     if (cleanedStr.toLowerCase().startsWith("cyprus ")) {
         cleanedStr = cleanedStr.slice(7); // Remove "Cyprus " (7 characters) from the start of the string
@@ -44,13 +44,15 @@ function formatString(str) {
 
     // Remove measurements and strings to be removed
     cleanedStr = cleanedStr.replace(measurementPattern, ''); // Remove measurement from name
+
     remove.forEach(word => {
         cleanedStr = cleanedStr.replace(new RegExp(`\\b${word}\\b`, 'ig'), ''); // Remove other unwanted strings
     });
 
     // Format cleaned string
     cleanedStr = cleanedStr.replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
-
+    cleanedStr = cleanedStr.replace(/&amp;/gi, "&").replace(/&apos;/gi, "'");
+    console.log("After : ", cleanedStr)
     return { name: cleanedStr.trim(), measurement };
 }
 
@@ -99,8 +101,8 @@ app.get("/", (request, response) => {
         })
     })
     .catch((x) => {
-        console.log("error");
-        response.status(500).send("Error occurred"); 
+        console.log("error", x);
+        response.status(500).send("Error occurred", x); 
     });
 });
 
