@@ -1,8 +1,12 @@
-const { default: axios } = require('axios');
-const express = require('express');
-require('dotenv').config()
+import axios from 'axios';
+import express from 'express'
+import dotenv from 'dotenv';
+import brands from './brand.js';
+import { parseString } from 'xml2js';
 const app = express();
-var parseString = require('xml2js').parseString;
+dotenv.config();
+
+
 
 
 
@@ -19,21 +23,42 @@ let Body = `
     </soap:Body>
     </soap:Envelope>
 `
+
+function removeBrand(str, wordsArray) {
+    // Find the first word in wordsArray that exists in str (case insensitive and whole word match)
+    const foundWord = wordsArray.find(word => {
+        const regex = new RegExp('\\b' + word.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b', 'gi');
+        return regex.test(str);
+    });
+
+    if (foundWord) {
+        // Remove the found word from str using replace and regex (to remove all occurrences, case insensitive)
+        const modifiedString = str.replace(new RegExp('\\b' + foundWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '\\b', 'gi'), '');
+        
+        // Return an object with modified string and the found word (original case)
+        return {
+            modifiedString: modifiedString.trim(),  // trim to remove leading/trailing spaces
+            foundWord: foundWord
+        };
+    } else {
+        // Return null or some indication that no match was found
+        return null;
+    }
+}
+
+
 function formatString(str) {
-    const remove = ["mm", "ml", "kg", "g", "gr", "£", "cl", "lt", "Each", "Tfc"]; // Strings to be removed
+    let brand = ""
+    const remove = ["mm", "ml", "kg", "g", "gr", "£", "cl", "lt", "Each"]; // Strings to be removed
+    const remove2 = [".M", ".E"]; // Strings to be removed
     const measurements = ["ml", "kg", "g", "gr", "cl", "lt"]; // Strings to be considered as measurements
 
     let cleanedStr = str.trim(); // Trim whitespace from the start and end of the string
-    console.log("Before : ", cleanedStr)
+    //console.log("Before : ", cleanedStr)
     // Remove the word "Cyprus" if it is the first word in the string
     if (cleanedStr.toLowerCase().startsWith("cyprus ")) {
         cleanedStr = cleanedStr.slice(7); // Remove "Cyprus " (7 characters) from the start of the string
     }
-
-
-    // Regular expression pattern for matching Tfc.X followed by a number
-    const tfcPattern = /Tfc\.\w\s*\d*/ig;
-    cleanedStr = cleanedStr.replace(tfcPattern, '').trim();
 
     // Regular expression pattern for matching measurements with numbers and optional multiplication symbols preceding them
     const measurementPattern = new RegExp(`\\b(\\d+(?:x\\d+)?(?:\\.\\d+)?) ?(${measurements.join('|')})\\b`, 'ig');
@@ -52,8 +77,23 @@ function formatString(str) {
     // Format cleaned string
     cleanedStr = cleanedStr.replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
     cleanedStr = cleanedStr.replace(/&amp;/gi, "&").replace(/&apos;/gi, "'");
+    
+
     console.log("After : ", cleanedStr)
-    return { name: cleanedStr.trim(), measurement };
+
+    const brandRemoved =  removeBrand(cleanedStr, brands)
+    if (brandRemoved) {     
+        
+        brand = brandRemoved.foundWord
+        cleanedStr = brandRemoved.modifiedString
+    }
+
+    remove2.forEach(word => {
+        cleanedStr = cleanedStr.replace(new RegExp(`\\b${word}\\b`, 'ig'), ''); // Remove other unwanted strings
+    });
+
+    
+    return { name: cleanedStr.trim(), measurement: measurement, brand: brand };
 }
 
 
@@ -82,6 +122,7 @@ function extractVariables(originalString, variable) {
   
 app.get("/", (request, response) => {
     response.send({Status: "OK"});
+    console.log(brands)
  });
 
  app.get("/allproducts", (request, response) => {
@@ -94,7 +135,7 @@ app.get("/", (request, response) => {
             let itemsJS = items.map(x => 
             {
                 let format = formatString(x.URUNACIKLAMA[0])
-                return {name: format.name, id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0], measurement: format.measurement,group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}
+                return {name: format.name, id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0],Brand: format.brand,  measurement: format.measurement ,group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}
             })
 
             response.send({Items: itemsJS});
