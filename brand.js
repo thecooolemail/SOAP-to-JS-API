@@ -277,7 +277,9 @@ let brands = [
      'Zwan',
      'Alnakhil',
      'Tat',
-     'Yorem'
+     'Yorem',
+     'Basra',
+     'Billur'
 ]
 
 export default brands
