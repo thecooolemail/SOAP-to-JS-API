@@ -279,7 +279,15 @@ let brands = [
      'Tat',
      'Yorem',
      'Basra',
-     'Billur'
+     'Billur',
+     'Violife',
+     'Delta',
+     'Bojentsi',
+     'Puck',
+     'Henna',
+     'Delta',
+     'Rodoula',
+     'Luxlait'
 ]
 
 export default brands

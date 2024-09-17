@@ -49,7 +49,7 @@ function removeBrand(str, wordsArray) {
 
 function formatString(str) {
     let brand = ""
-    const remove = ["mm", "ml", "kg", "g", "gr", "£", "cl", "lt", "Each"]; // Strings to be removed
+    const remove = ["mm", "ml", "kg", "g", "gr", "£", "cl", "lt", "Each", ".M", ".E"]; // Strings to be removed
     const remove2 = [".M", ".E"]; // Strings to be removed
     const measurements = ["ml", "kg", "g", "gr", "cl", "lt"]; // Strings to be considered as measurements
 
