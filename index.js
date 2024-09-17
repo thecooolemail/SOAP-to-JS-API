@@ -77,9 +77,6 @@ function formatString(str) {
     // Format cleaned string
     cleanedStr = cleanedStr.replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
     cleanedStr = cleanedStr.replace(/&amp;/gi, "&").replace(/&apos;/gi, "'");
-    
-
-    console.log("After : ", cleanedStr)
 
     const brandRemoved =  removeBrand(cleanedStr, brands)
     if (brandRemoved) {     
@@ -101,6 +98,7 @@ function extractVariables(originalString, variable) {
     // Split the original string by "-"
     var phases = originalString.split("-");
     
+    console.log(originalString)
     // Extracting variables
     var collection = phases[1].replace(/&amp;|&Amp;/g, "&").toLowerCase().replace(/\b\w/g, function(char) { return char.toUpperCase(); }); // Second phase after first
     var parentfacet = phases[2].replace(/&amp;|&Amp;/g, "&").toLowerCase().replace(/\b\w/g, function(char) { return char.toUpperCase(); }); // Second phase after first
@@ -122,7 +120,6 @@ function extractVariables(originalString, variable) {
   
 app.get("/", (request, response) => {
     response.send({Status: "OK"});
-    console.log(brands)
  });
 
  app.get("/allproducts", (request, response) => {
@@ -131,19 +128,21 @@ app.get("/", (request, response) => {
     .then((x) => {
         parseString(x.data, function (err, result) {
             let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
-            console.log("Got Items")
+            console.log("Got Items", items[0],items[1], "...")
             let itemsJS = items.map(x => 
             {
                 let format = formatString(x.URUNACIKLAMA[0])
+                console.log(x)
                 return {name: format.name, id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0],brand: format.brand,  measurement: format.measurement ,group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}
             })
 
-            response.send({Items: itemsJS});
+            //response.send({Items: itemsJS});
+            response.status(200).send({ Items: itemsJS });
         })
     })
     .catch((x) => {
         console.log("error", x);
-        response.status(500).send("Error occurred", x); 
+        response.status(500).send(("Error occured", x));
     });
 });
 
