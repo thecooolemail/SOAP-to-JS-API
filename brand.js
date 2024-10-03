@@ -287,7 +287,11 @@ let brands = [
      'Henna',
      'Delta',
      'Rodoula',
-     'Luxlait'
+     'Luxlait',
+     'Kyknos',
+     'La Molisana',
+     'Tilda',
+     'Hayat'
 ]
 
 export default brands

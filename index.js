@@ -126,6 +126,7 @@ app.get("/", (request, response) => {
     console.log("Getting Items")
     axios.post(process.env.URL, Body,{ headers: { "Content-Type": "text/xml; charset=utf-8" }})
     .then((x) => {
+        console.log(x.length, "Items got")
         parseString(x.data, function (err, result) {
             let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
             console.log("Got Items", items[0],items[1], "...")
