@@ -291,7 +291,8 @@ let brands = [
      'Kyknos',
      'La Molisana',
      'Tilda',
-     'Hayat'
+     'Hayat',
+     'Pasabahce'
 ]
 
 export default brands
