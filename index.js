@@ -147,6 +147,77 @@ app.get("/", (request, response) => {
     });
 });
 
+
+
+
+function groupBy(array, key) {
+    const grouped = []; // To store the final grouped results
+    const lookup = {};  // To track the already encountered keys
+
+    array.forEach(item => {
+        const groupKey = item[key]; // Get the value of the specified key
+
+        // If the key already exists, add the item to that group
+        if (lookup[groupKey]) {
+            lookup[groupKey].Products.push({Name: item.name, SKU: item.sku});
+            lookup[groupKey].ProductsCount++;
+        } else {
+            // If the key does not exist, create a new group
+            const newGroup = {
+                Brand: groupKey,
+                ProductsCount: 1,
+                Products: [{Name: item.name, SKU: item.sku}]
+            };
+            grouped.push(newGroup);
+            lookup[groupKey] = newGroup; // Add the group to the lookup for future reference
+        }
+    });
+
+    return grouped;
+}
+
+
+
+
+app.get("/brandCount", (request, response) => {
+    console.log("Getting Items")
+    axios.post(process.env.URL, Body,{ headers: { "Content-Type": "text/xml; charset=utf-8" }})
+    .then((x) => {
+        console.log(x.length, "Items got")
+        parseString(x.data, function (err, result) {
+            let items = result['soap:Envelope']['soap:Body'][0].GetUrunListesiResponse[0].GetUrunListesiResult[0].clsUrunler
+            console.log("Got Items", items[0],items[1], "...")
+            let itemsJS = items.map(x => 
+            {
+                let format = formatString(x.URUNACIKLAMA[0])
+                console.log(x)
+                return {name: format.name, id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0],brand: format.brand,  measurement: format.measurement ,group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}
+            })
+
+            const groupedByBrand = groupBy(itemsJS, 'brand');
+
+
+            //response.send({Items: itemsJS});
+            response.status(200).send({ Items: groupedByBrand });
+        })
+    })
+    .catch((x) => {
+        console.log("error", x);
+        response.status(500).send(("Error occured", x));
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`API server listening on port ${port}`);
