@@ -3,6 +3,13 @@ import express from 'express'
 import dotenv from 'dotenv';
 import brands from './brand.js';
 import { parseString } from 'xml2js';
+
+
+import xlsx from 'xlsx'; // Default import for CommonJS
+
+// Destructure the necessary utilities from the default import
+const { utils, writeFile } = xlsx; 
+
 const app = express();
 dotenv.config();
 
@@ -178,8 +185,43 @@ function groupBy(array, key) {
 
 
 
+function convertToExcel(productData) {
+    // Create a new workbook
+    const workbook = utils.book_new();
 
-app.get("/brandCount", (request, response) => {
+    // Create sheet data with headers for each field
+    const data = [
+        ["Name", "ID", "Price", "Unit", "Brand", "Measurement", "Group", "SKU", "Collection", "ParentFacet", "ChildFacet"], // Header row
+        ...productData.map(product => [
+            product.name, 
+            product.id, 
+            product.price, 
+            product.unit, 
+            product.brand, 
+            product.measurement, 
+            product.group, 
+            product.sku, 
+            product.Collection, 
+            product.parentfacet, 
+            product.childfacet
+        ]) // Each product becomes a row
+    ];
+
+    // Create a new worksheet
+    const worksheet = utils.aoa_to_sheet(data);
+
+    // Append the worksheet to the workbook
+    utils.book_append_sheet(workbook, worksheet, "Products");
+
+    // Convert the workbook to a buffer
+    const excelBuffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+    return excelBuffer; // Return the buffer to be sent as a response
+}
+
+
+
+app.get("/allproductsExcel", (request, response) => {
     console.log("Getting Items")
     axios.post(process.env.URL, Body,{ headers: { "Content-Type": "text/xml; charset=utf-8" }})
     .then((x) => {
@@ -194,11 +236,12 @@ app.get("/brandCount", (request, response) => {
                 return {name: format.name, id: x.URUNID[0], price: x.PERSATISFIYAT3[0], unit: x.BARKODLAR[0].clsBarkodlar[0].BIRIMKOD[0],brand: format.brand,  measurement: format.measurement ,group: x.URUNGRUBU[0],  sku: x.URUNKOD[0], Collection: extractVariables(x.URUNGRUPLAR[0], "collection"), parentfacet: extractVariables(x.URUNGRUPLAR[0], "parentfacet"), childfacet: extractVariables(x.URUNGRUPLAR[0], "childfacet")}
             })
 
-            const groupedByBrand = groupBy(itemsJS, 'brand');
+            const excelFile = convertToExcel(itemsJS);
 
+            response.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            response.setHeader('Content-Disposition', 'attachment; filename="Products.xlsx"');
 
-            //response.send({Items: itemsJS});
-            response.status(200).send({ Items: groupedByBrand });
+            response.status(200).send(excelFile);
         })
     })
     .catch((x) => {
@@ -206,11 +249,6 @@ app.get("/brandCount", (request, response) => {
         response.status(500).send(("Error occured", x));
     });
 });
-
-
-
-
-
 
 
 
