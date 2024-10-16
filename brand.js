@@ -296,7 +296,13 @@ let brands = [
      'Rio Mare',
      "Green Giant",
      'Yurttan',
-     'Heinz'
+     'Heinz',
+     'Lotto',
+     'Eazy Pop',
+     'Fanta',
+     'Robert',
+     'Knoppers',
+     'Nescafe'
 ]
 
 export default brands
